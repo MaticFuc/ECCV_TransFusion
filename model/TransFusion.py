@@ -178,7 +178,7 @@ class TransFusion(nn.Module):
 
         xt, noise, mask, mask_c = self.q_sample(x0, mask, t, eps=noise, mask_c=mask_c)
         for b in range(batch_size):
-            prob = np.random.rand() > 1.7  # TODO: Parametrize this
+            prob = np.random.rand() > 0.7
             if prob:
                 high, low = 20, -20
                 angle = np.random.random() * (high - low) + low
