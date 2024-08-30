@@ -1,5 +1,9 @@
 # [ECCV 2024] TransFusion
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/transfusion-a-transparency-based-diffusion/rgb-3d-anomaly-detection-and-segmentation-on)](https://paperswithcode.com/sota/rgb-3d-anomaly-detection-and-segmentation-on?p=transfusion-a-transparency-based-diffusion)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/transfusion-a-transparency-based-diffusion/anomaly-detection-on-visa)](https://paperswithcode.com/sota/anomaly-detection-on-visa?p=transfusion-a-transparency-based-diffusion)
+
 This repository holds the official Pytorch implementation for the paper [TransFusion -- A Transparency-Based Diffusion Model for Anomaly Detection](https://arxiv.org/abs/2311.09999) accepted at ECCV 2024. Journal paper about the extension to 3D and improvements to the base model coming soon.
 
 ![](material/arch.png)
