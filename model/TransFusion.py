@@ -23,7 +23,7 @@ class TransFusion(nn.Module):
 
         steps = parameters["num_steps"]
         self.mode = parameters["mode"]
-        self.mask_chans = int("rgb" in self.mode) + int("d" in self.mode)
+        self.mask_chans = 1
         self.model = model
         self.beta = torch.linspace(0, 1, steps).cuda()
         self.steps = steps
@@ -191,6 +191,7 @@ class TransFusion(nn.Module):
                 mask_c[b, :] = torchvision.transforms.functional.rotate(
                     mask_c[b, :], angle
                 )
+
         input = torch.cat((xt, mask_c), dim=1)
 
         predicted_noise, predicted_mean, predicted_mask = self.model(input, t)
