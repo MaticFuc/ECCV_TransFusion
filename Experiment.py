@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 from scipy import signal
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import average_precision_score, roc_auc_score
 from tqdm import tqdm
 
 from utils import Argparser, EvaluationUtils, ParsingUtils, VisualizationUtils
@@ -123,8 +123,10 @@ def test(args):
         "category": args.category,
         "save_imgs": args.visualize,
     }
-    auroc, aupro = evaluate(PATH, testset, net, experiment, load_weights=True)
-    return auroc, aupro
+    auroc, aupro, auroc_pix, ap_pix = evaluate(
+        PATH, testset, net, experiment, load_weights=True
+    )
+    return auroc, aupro, auroc_pix, ap_pix
 
 
 def evaluate(PATH, testset, net, parameters, load_weights=False):
@@ -240,7 +242,10 @@ def evaluate(PATH, testset, net, parameters, load_weights=False):
                 prog_bar.update(batch_size)
 
     rocScoreImg = roc_auc_score(trueScore, predScore)
+    rocScorePixel = roc_auc_score(true_masks.flatten(), all_masks.flatten())
+    apScorePixel = average_precision_score(true_masks.flatten(), all_masks.flatten())
     pro = EvaluationUtils.compute_pro(all_masks, true_masks)
+
     run_name = PATH.split("/")[-2]
 
     print(
@@ -254,6 +259,8 @@ def evaluate(PATH, testset, net, parameters, load_weights=False):
         "Kernel Size": [k],
         "Roc Img": [rocScoreImg],
         "PRO Img": [pro],
+        "Roc Pixel": [rocScorePixel],
+        "AP Pixel": [apScorePixel],
     }
     df = pd.DataFrame(data=df)
     csv_mode = "a"
@@ -265,7 +272,7 @@ def evaluate(PATH, testset, net, parameters, load_weights=False):
         index=False,
         header=csv_mode == "w",
     )
-    return rocScoreImg, pro
+    return rocScoreImg, pro, rocScorePixel, apScorePixel
 
 
 if __name__ == "__main__":
@@ -324,7 +331,7 @@ if __name__ == "__main__":
     else:
         categories = [args.category]
 
-    auroc_all, aupro_all = 0, 0
+    auroc_all, aupro_all, auroc_pix_all, ap_pix_all = 0, 0, 0, 0
     if args.choice == "train":
         for category in categories:
             setattr(args, "category", category)
@@ -332,11 +339,34 @@ if __name__ == "__main__":
     elif args.choice == "test":
         for category in categories:
             setattr(args, "category", category)
-            auroc, aupro = test(args)
+            auroc, aupro, auroc_pix, ap_pix = test(args)
             auroc_all += auroc
             aupro_all += aupro
+            auroc_pix_all += auroc_pix
+            ap_pix_all += ap_pix
         auroc_all /= len(categories)
         aupro_all /= len(categories)
+        auroc_pix_all /= len(categories)
+        ap_pix_all /= len(categories)
         print(
-            f"AVG AUROC: {round(auroc_all*100, 2)}, AVG AUPRO: {round(aupro_all*100, 2)}"
+            f"AVG AUROC: {round(auroc_all*100, 2)}, AVG AUPRO: {round(aupro_all*100, 2)}, AVG AUROC PIX: {round(auroc_pix_all*100, 2)}, AVG AP PIX: {round(ap_pix_all*100)}"
+        )
+
+        df = {
+            "Category": ["Average"],
+            "Epoch": [args.epoch_num],
+            "Weight": [round(args.eval_w, 2)],
+            "Kernel Size": [args.eval_kernel_size],
+            "Roc Img": [auroc_all],
+            "PRO Img": [aupro_all],
+            "Roc Pixel": [auroc_pix_all],
+            "AP Pixel": [ap_pix_all],
+        }
+        df = pd.DataFrame(data=df)
+        csv_mode = "a"
+        df.to_csv(
+            f"{args.log_path}{args.run_name}/output.csv",
+            mode=csv_mode,
+            index=False,
+            header=csv_mode == "w",
         )
