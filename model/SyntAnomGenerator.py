@@ -175,9 +175,12 @@ class SyntAnomalyGenerator:
 
         if self.rgb:
             noiseMap = self.getPerlinNoise(x0, False)
-            foregroundMask = self.maskDataset.__getitem__(idx)
-            if self.is_texture or not self.use_pretrained_masks:
-                foregroundMask = np.ones_like(foregroundMask)
+            if self.use_pretrained_masks:
+                foregroundMask = self.maskDataset.__getitem__(idx)
+                if self.is_texture:
+                    foregroundMask = np.ones_like(foregroundMask)
+            else:
+                foregroundMask = np.ones((noiseMap.shape[-2], noiseMap.shape[-1]))
 
             img = self.anomalySource(x0.cpu().numpy())
             img = torch.FloatTensor(img)
