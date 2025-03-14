@@ -39,8 +39,7 @@ def get_backgrounds(imgs, out_path):
             cv2.imwrite(f"{out_path}/{idx}", final_mask.transpose((1,2,0)))
 
 def setup_sam():
-    model_path = "/ceph/hpc/home/mfucka/maticf/pretrained_models/"
-    # model_path = "./pretrained_models/"
+    model_path = "./pretrained_models/"
     sam_checkpoint = f"{model_path}sam_vit_h_4b8939.pth"
     model_type = "vit_h"
 

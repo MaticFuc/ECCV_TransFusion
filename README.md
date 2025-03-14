@@ -33,6 +33,17 @@ To install and set up the TransFusion environment, follow these steps:
 
 3. **(For training only) Download foreground masks using `download_fg_masks.sh` inside the scripts folder**
 
+# Foreground mask extraction
+
+For datasets without provided foreground masks use the following command (exchange the parameters for the correct one) to extract them:
+
+ ```
+    python utils/FGMaskCreator.py -p ./datasets/dataset/ -o ./fg_masks/dataset_masks/ -c category_1 -c category_2 ... -c category_n --file-ending png
+```
+
+The extraction requires the installation of SAM (see [here](https://github.com/facebookresearch/segment-anything)) and downloading the pretrained weight (`sam_vit_h_4b8939.pth`) inside the `./pretrained_weights/` folder.
+
+
 # Training
 
 For training on the MVTec3D dataset use the following command (and exchange the paths for the correct ones):
