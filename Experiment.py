@@ -14,6 +14,7 @@ from tqdm import tqdm
 from utils import Argparser, EvaluationUtils, ParsingUtils, VisualizationUtils
 
 
+
 def train(args):
 
     (
@@ -78,6 +79,7 @@ def train(args):
                 prog_bar.update(batch_size)
 
         if epoch % evaluate_step == 0:
+            torch.save(net.state_dict(), PATH + f"models/{args.category}_model.pkl")
             net.eval()
             with open(PATH + f"models/{args.category}_epoch.txt", "w") as f:
                 torch.save(
@@ -99,14 +101,49 @@ def train(args):
                 "category": args.category,
                 "save_imgs": args.visualize,
             }
-            evaluate(
-                PATH,
-                testset,
-                net,
-                experiment,
-            )
+            if args.multiclass:
+                auroc_all, aupro_all, auroc_pix_all, ap_pix_all = 0, 0, 0, 0
+                categories_test = get_categories(args)
+                for category in categories_test:
+                    setattr(args, "category", category)
+                    auroc, aupro, auroc_pix, ap_pix = test_multiclass(args)
+                    auroc_all += auroc
+                    aupro_all += aupro
+                    auroc_pix_all += auroc_pix
+                    ap_pix_all += ap_pix
+                auroc_all /= len(categories_test)
+                aupro_all /= len(categories_test)
+                auroc_pix_all /= len(categories_test)
+                ap_pix_all /= len(categories_test)
+
+                df = {
+                    "Category": ["Average"],
+                    "Epoch": [args.epoch_num],
+                    "Weight": [round(args.eval_w, 2)],
+                    "Kernel Size": [args.eval_kernel_size],
+                    "Roc Img": [auroc_all],
+                    "PRO Img": [aupro_all],
+                    "Roc Pixel": [auroc_pix_all],
+                    "AP Pixel": [ap_pix_all],
+                }
+                df = pd.DataFrame(data=df)
+                csv_mode = "a"
+                df.to_csv(
+                    f"{args.log_path}{args.run_name}/output.csv",
+                    mode=csv_mode,
+                    index=False,
+                    header=csv_mode == "w",
+                )
+                setattr(args, "category", "*")
+            else:
+                evaluate(
+                    PATH,
+                    testset,
+                    net,
+                    experiment,
+                )
         scheduler.step()
-    torch.save(net.state_dict(), PATH + f"models/{args.category}_model.pkl")
+    
 
 
 def test(args):
@@ -128,14 +165,35 @@ def test(args):
     )
     return auroc, aupro, auroc_pix, ap_pix
 
+def test_multiclass(args):
 
-def evaluate(PATH, testset, net, parameters, load_weights=False):
+    (PATH, _, testset, net, _, _, mode) = ParsingUtils.parse_args(args)
+
+    experiment = {
+        "num_steps": net.steps - 1,
+        "kernel_size": args.eval_kernel_size,
+        "weight": args.eval_w,
+        "epoch": args.epoch_num,
+        "mode": mode,
+        "img_size": args.img_size,
+        "category": args.category,
+        "save_imgs": args.visualize,
+    }
+    auroc, aupro, auroc_pix, ap_pix = evaluate(
+        PATH, testset, net, experiment, load_weights=True, category_name="*"
+    )
+    return auroc, aupro, auroc_pix, ap_pix
+
+
+
+def evaluate(PATH, testset, net, parameters, load_weights=False, category_name=None):
     category = parameters["category"]
     save_imgs = parameters["save_imgs"]
     if save_imgs:
         os.makedirs(f"{PATH}visualizations/{category}/", exist_ok=True)
     if load_weights:
-        net.load_state_dict(torch.load(PATH + f"models/{category}_model.pkl"))
+        category_name = category if category_name is None else category_name
+        net.load_state_dict(torch.load(PATH + f"models/{category_name}_model.pkl"))
     net.eval()
 
     batch_size = 1
@@ -274,11 +332,7 @@ def evaluate(PATH, testset, net, parameters, load_weights=False):
     )
     return rocScoreImg, pro, rocScorePixel, apScorePixel
 
-
-if __name__ == "__main__":
-    parser = Argparser.get_argparser()
-    args = parser.parse_args()
-
+def get_categories(args):
     categories = {
         "mvtec3d": [
             "cable_gland",
@@ -324,22 +378,67 @@ if __name__ == "__main__":
             "pipe_fryum",
         ],
     }
+    return categories[args.dataset]
+
+
+if __name__ == "__main__":
+    parser = Argparser.get_argparser()
+    args = parser.parse_args()
 
     if args.category == "all":
-        categories = categories[args.dataset]
+        categories = get_categories(args)
         categories.sort()
     else:
         categories = [args.category]
 
     auroc_all, aupro_all, auroc_pix_all, ap_pix_all = 0, 0, 0, 0
     if args.choice == "train":
+        setattr(args, "multiclass", False)
         for category in categories:
             setattr(args, "category", category)
             train(args)
+    elif args.choice == "train_multiclass":
+        setattr(args, "category", "*")
+        setattr(args, "multiclass", True)
+        train(args)
     elif args.choice == "test":
         for category in categories:
             setattr(args, "category", category)
             auroc, aupro, auroc_pix, ap_pix = test(args)
+            auroc_all += auroc
+            aupro_all += aupro
+            auroc_pix_all += auroc_pix
+            ap_pix_all += ap_pix
+        auroc_all /= len(categories)
+        aupro_all /= len(categories)
+        auroc_pix_all /= len(categories)
+        ap_pix_all /= len(categories)
+        print(
+            f"AVG AUROC: {round(auroc_all*100, 2)}, AVG AUPRO: {round(aupro_all*100, 2)}, AVG AUROC PIX: {round(auroc_pix_all*100, 2)}, AVG AP PIX: {round(ap_pix_all*100)}"
+        )
+
+        df = {
+            "Category": ["Average"],
+            "Epoch": [args.epoch_num],
+            "Weight": [round(args.eval_w, 2)],
+            "Kernel Size": [args.eval_kernel_size],
+            "Roc Img": [auroc_all],
+            "PRO Img": [aupro_all],
+            "Roc Pixel": [auroc_pix_all],
+            "AP Pixel": [ap_pix_all],
+        }
+        df = pd.DataFrame(data=df)
+        csv_mode = "a"
+        df.to_csv(
+            f"{args.log_path}{args.run_name}/output.csv",
+            mode=csv_mode,
+            index=False,
+            header=csv_mode == "w",
+        )
+    elif args.choice == "test_multiclass":
+        for category in categories:
+            setattr(args, "category", category)
+            auroc, aupro, auroc_pix, ap_pix = test_multiclass(args)
             auroc_all += auroc
             aupro_all += aupro
             auroc_pix_all += auroc_pix

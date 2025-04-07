@@ -58,6 +58,12 @@ For training on VisA or MVTec AD dataset use the following command (exchange the
     python Experiment.py -c train -r RUN_NAME -d ./datasets/DATASET/ -ds DATASET --mode rgb --dtd-data-path ./datasets/dtd/images/
 ```
 
+For multiclass training the command stays pretty similar:
+
+ ```
+    python Experiment.py -c train_multiclass -r RUN_NAME -d ./datasets/DATASET/ -ds DATASET --mode rgb --dtd-data-path ./datasets/dtd/images/
+```
+
 For changes to other parameters check the `Argparser.py` inside `utils`.
 
 # Testing
@@ -68,10 +74,16 @@ To evaluate the model on MVTec 3D use the following command:
     python Experiment.py -c test -r RUN_NAME -d ./datasets/mvtec3d/ -ds mvtec3d --mode rgbd
 ```
 
-For VisA or MVTec use use the following command (exchnage DATASET for either visa or mvtec):
+For VisA or MVTec use use the following command (exchange DATASET for either visa or mvtec):
 
  ```
     python Experiment.py -c test -r RUN_NAME -d ./datasets/DATASET/ -ds DATASET --mode rgb
+```
+
+For testing multiclass models use the following command (exchange DATASET for either visa or mvtec):
+
+ ```
+    python Experiment.py -c test_multiclass -r RUN_NAME -d ./datasets/DATASET/ -ds DATASET --mode rgb
 ```
 
 If you want result visualization add the `--visualize` at the end.
@@ -80,11 +92,14 @@ If you want result visualization add the `--visualize` at the end.
 
 Here is a list of currently avaible model weights (all attained at last epoch) and their download links. Preferably download the models using the scripts inside the `scripts` which also setup the correct folder structure for testing. The run names for the weights downloaded with the scripts are `transfusion_mvtec3d`, `transfusion_visa` and `transfusion_mvtec`.
 
+**New**: Added weights for a model trained in a multiclass setting on MVTec AD. Weights for (single class) MVTec AD 2 coming soon.
+
 | Dataset  | Model Weights                                                                                     | Image-level AUROC | AUPRO |
 |----------|---------------------------------------------------------------------------------------------------|-------------------|-------|
 | MVTec 3D | [Download](https://drive.google.com/file/d/1RZBZqo-lbywk2lPxnr_H--ERFxbCeXqP/view?usp=drive_link) | 98.2              | 98.3  |
 | VisA     | [Download](https://drive.google.com/file/d/1iXY6ILcDo33wywyI_zl7Hh8ch2W_5lMz/view?usp=drive_link) | 98.7              | 94.7  |
 | MVTec AD | [Download](https://drive.google.com/file/d/1KL7_AwO2zKOHfBY5wcMy_Qj49guSQBc4/view?usp=drive_link) | 99.4              | 95.3  |
+| MVTec AD (Multiclass) | [Download](https://drive.google.com/file/d/1l2tbt2IqiHeOmkjIyzA3Jbp2vzrwMLD_/view?usp=sharing) | 92.4              | 81.3  |
 
 # Citation
 

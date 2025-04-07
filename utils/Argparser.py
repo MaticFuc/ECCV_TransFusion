@@ -34,7 +34,7 @@ def get_argparser():
     parser.add_argument(
         "--mode", type=str, default="rgbd", choices=["rgb", "d", "rgbd"]
     )
-    parser.add_argument("--fg-mask-path", type=str, default="./fg_masks/")
+    parser.add_argument("--fg-mask-path", type=str, default="/ceph/hpc/home/mfucka/maticf/datasets/sam_backgrounds/")
     parser.add_argument("--no-fg-masks", default=True, action="store_false")
     parser.add_argument("--dtd-path", type=str, default="/storage/datasets/DTD/images/")
     parser.add_argument(
@@ -44,7 +44,7 @@ def get_argparser():
     parser.add_argument("--visualize", default=False, action="store_true")
     parser.add_argument("--seed", type=int, default=3)
 
-    parser.add_argument("--epoch-num", type=int, default=1500)
+    parser.add_argument("--epoch-num", type=int, default=1501)
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--bs", type=int, default=8)
     parser.add_argument("--step-size", type=int, default=800)
