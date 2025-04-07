@@ -34,7 +34,7 @@ def get_argparser():
     parser.add_argument(
         "--mode", type=str, default="rgbd", choices=["rgb", "d", "rgbd"]
     )
-    parser.add_argument("--fg-mask-path", type=str, default="/ceph/hpc/home/mfucka/maticf/datasets/sam_backgrounds/")
+    parser.add_argument("--fg-mask-path", type=str, default="./fg_masks/")
     parser.add_argument("--no-fg-masks", default=True, action="store_false")
     parser.add_argument("--dtd-path", type=str, default="/storage/datasets/DTD/images/")
     parser.add_argument(
